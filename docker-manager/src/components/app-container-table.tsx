@@ -245,6 +245,7 @@ export function AppContainerTable() {
     header: () => <div className={columnWidths.actions}>Actions</div>,
     cell: ({ row }) => {
       const container = row.original;
+      console.log(container);
       const isRunning = container.Status.includes("Up");
 
       return (
