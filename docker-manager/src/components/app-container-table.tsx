@@ -44,6 +44,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Define the Container type based on dockerode's container info
 export type Container = {
@@ -107,7 +115,7 @@ const formatPorts = (ports: Container["Ports"]) => {
 // Function to format creation time
 const formatCreatedTime = (timestamp: number) => {
   const date = new Date(timestamp * 1000);
-  return date.toLocaleString();
+  return date.toLocaleDateString('en-CA'); // en-CA uses yyyy/mm/dd format
 };
 
 // Common cell class for truncation
@@ -204,6 +212,8 @@ export function AppContainerTable() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [containerToRemove, setContainerToRemove] = React.useState<string | null>(null);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = React.useState(false);
 
   // Function to handle container actions (stop, start, restart, remove)
   const handleContainerAction = async (
@@ -211,8 +221,10 @@ export function AppContainerTable() {
     action: 'start' | 'stop' | 'restart' | 'remove', 
     requireConfirmation = false
   ) => {
-    // If confirmation required and user cancels, abort
-    if (requireConfirmation && !confirm(`Are you sure you want to ${action} this container?`)) {
+    // For remove action, open the dialog instead of using browser confirm
+    if (action === 'remove' && requireConfirmation) {
+      setContainerToRemove(containerId);
+      setIsRemoveDialogOpen(true);
       return;
     }
 
@@ -238,6 +250,15 @@ export function AppContainerTable() {
     }
   };
 
+  // Function to confirm container removal
+  const confirmRemoveContainer = async () => {
+    if (containerToRemove) {
+      await handleContainerAction(containerToRemove, 'remove');
+      setContainerToRemove(null);
+      setIsRemoveDialogOpen(false);
+    }
+  };
+
   // Define columns with access to the handleContainerAction function
   const actionColumn: ColumnDef<Container> = {
     id: "actions",
@@ -245,8 +266,8 @@ export function AppContainerTable() {
     header: () => <div className={columnWidths.actions}>Actions</div>,
     cell: ({ row }) => {
       const container = row.original;
-      console.log(container);
       const isRunning = container.Status.includes("Up");
+      const containerName = formatContainerName(container.Names);
 
       return (
         <div className={columnWidths.actions}>
@@ -481,6 +502,26 @@ export function AppContainerTable() {
           </Button>
         </div>
       </div>
+
+      {/* Remove Container Confirmation Dialog */}
+      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Container</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this container? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRemoveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmRemoveContainer}>
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

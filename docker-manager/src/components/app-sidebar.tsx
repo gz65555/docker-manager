@@ -1,5 +1,7 @@
+"use client"
 import * as React from "react"
 import { GalleryVerticalEnd } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 import {
   Sidebar,
@@ -15,28 +17,33 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
-const data = {
-  navMain: [
-    {
-      title: "Docker",
-      url: "#",
-      items: [
-        {
-          title: "Containers",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Images",
-          url: "#",
-        },
-      ],
-    }
-  ],
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+  
+  // Update the active state based on the current path
+  const navData = React.useMemo(() => {
+    return {
+      navMain: [
+        {
+          title: "Docker",
+          url: "#",
+          items: [
+            {
+              title: "Containers",
+              url: "/dashboard",
+              isActive: pathname === "/dashboard",
+            },
+            {
+              title: "Images",
+              url: "/dashboard/images",
+              isActive: pathname === "/dashboard/images",
+            },
+          ],
+        }
+      ],
+    };
+  }, [pathname]);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -59,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {data.navMain.map((item) => (
+            {navData.navMain.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <a href={item.url} className="font-medium">

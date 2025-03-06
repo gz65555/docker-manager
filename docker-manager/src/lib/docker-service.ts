@@ -40,4 +40,10 @@ export async function removeContainer(containerId: string, options = { force: tr
   const docker = getDockerInstance();
   const container = docker.getContainer(containerId);
   return await container.remove(options);
+}
+
+// Image operations
+export async function listImages() {
+  const docker = getDockerInstance();
+  return await docker.listImages();
 } 
